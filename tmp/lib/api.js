@@ -1,0 +1,159 @@
+// API Base URL - Backend Java Spring Boot
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
+// Helper function để gọi API
+async function apiCall(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+        ...options,
+    };
+
+    try {
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Call Error:', error);
+        throw error;
+    }
+}
+
+// Products API
+export const productsAPI = {
+    getAll: () => apiCall('/products'),
+    getById: (id) => apiCall(`/products/${id}`),
+    getByStore: (storeId) => apiCall(`/products/store/${storeId}`),
+    getByCategory: (category) => apiCall(`/products/category/${category}`),
+    getLatest: () => apiCall('/products/latest'),
+    search: (keyword) => apiCall(`/products/search?keyword=${encodeURIComponent(keyword)}`),
+    create: (product) => apiCall('/products', {
+        method: 'POST',
+        body: JSON.stringify(product),
+    }),
+    update: (id, product) => apiCall(`/products/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(product),
+    }),
+    delete: (id) => apiCall(`/products/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Orders API
+export const ordersAPI = {
+    getAll: () => apiCall('/orders'),
+    getById: (id) => apiCall(`/orders/${id}`),
+    getByUser: (userId) => apiCall(`/orders/user/${userId}`),
+    getByStore: (storeId) => apiCall(`/orders/store/${storeId}`),
+    getByStoreAndStatus: (storeId, status) => apiCall(`/orders/store/${storeId}/status/${status}`),
+    create: (order) => apiCall('/orders', {
+        method: 'POST',
+        body: JSON.stringify(order),
+    }),
+    update: (id, order) => apiCall(`/orders/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(order),
+    }),
+    updateStatus: (id, status) => apiCall(`/orders/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    }),
+    delete: (id) => apiCall(`/orders/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Users API
+export const usersAPI = {
+    getAll: () => apiCall('/users'),
+    getById: (id) => apiCall(`/users/${id}`),
+    getByEmail: (email) => apiCall(`/users/email/${email}`),
+    create: (user) => apiCall('/users', {
+        method: 'POST',
+        body: JSON.stringify(user),
+    }),
+    update: (id, user) => apiCall(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(user),
+    }),
+    delete: (id) => apiCall(`/users/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Stores API
+export const storesAPI = {
+    getAll: () => apiCall('/stores'),
+    getById: (id) => apiCall(`/stores/${id}`),
+    getByUsername: (username) => apiCall(`/stores/username/${username}`),
+    getByUserId: (userId) => apiCall(`/stores/user/${userId}`),
+    getActive: () => apiCall('/stores/active'),
+    getByStatus: (status) => apiCall(`/stores/status/${status}`),
+    create: (store) => apiCall('/stores', {
+        method: 'POST',
+        body: JSON.stringify(store),
+    }),
+    update: (id, store) => apiCall(`/stores/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(store),
+    }),
+    toggleActive: (id) => apiCall(`/stores/${id}/toggle-active`, {
+        method: 'PATCH',
+    }),
+    updateStatus: (id, status) => apiCall(`/stores/${id}/status?status=${encodeURIComponent(status)}`, {
+        method: 'PATCH',
+    }),
+    delete: (id) => apiCall(`/stores/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Admin API
+export const adminAPI = {
+    getDashboard: () => apiCall('/admin/dashboard'),
+};
+
+// Addresses API
+export const addressesAPI = {
+    getAll: () => apiCall('/addresses'),
+    getById: (id) => apiCall(`/addresses/${id}`),
+    getByUser: (userId) => apiCall(`/addresses/user/${userId}`),
+    create: (address) => apiCall('/addresses', {
+        method: 'POST',
+        body: JSON.stringify(address),
+    }),
+    update: (id, address) => apiCall(`/addresses/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(address),
+    }),
+    delete: (id) => apiCall(`/addresses/${id}`, {
+        method: 'DELETE',
+    }),
+};
+
+// Coupons API
+export const couponsAPI = {
+    getAll: () => apiCall('/coupons'),
+    getByCode: (code) => apiCall(`/coupons/${code}`),
+    getPublic: () => apiCall('/coupons/public'),
+    create: (coupon) => apiCall('/coupons', {
+        method: 'POST',
+        body: JSON.stringify(coupon),
+    }),
+    update: (code, coupon) => apiCall(`/coupons/${code}`, {
+        method: 'PUT',
+        body: JSON.stringify(coupon),
+    }),
+    delete: (code) => apiCall(`/coupons/${code}`, {
+        method: 'DELETE',
+    }),
+};
+

@@ -1,0 +1,58 @@
+package com.gocart.controller;
+
+import com.gocart.model.Order;
+import com.gocart.repository.OrderRepository;
+import com.gocart.repository.ProductRepository;
+import com.gocart.repository.StoreRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/admin")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class AdminController {
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final StoreRepository storeRepository;
+
+    /**
+     * Lấy thống kê tổng quan cho admin dashboard
+     * GET /api/admin/dashboard
+     */
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Tổng số products
+        long totalProducts = productRepository.count();
+        stats.put("products", totalProducts);
+        
+        // Tổng số stores
+        long totalStores = storeRepository.count();
+        stats.put("stores", totalStores);
+        
+        // Tổng số orders
+        long totalOrders = orderRepository.count();
+        stats.put("orders", totalOrders);
+        
+        // Tổng revenue (tổng total của tất cả orders đã thanh toán)
+        List<Order> paidOrders = orderRepository.findByIsPaidTrue();
+        double totalRevenue = paidOrders.stream()
+                .mapToDouble(order -> order.getTotal() != null ? order.getTotal() : 0.0)
+                .sum();
+        stats.put("revenue", totalRevenue);
+        
+        // Tất cả orders (để vẽ chart)
+        List<Order> allOrders = orderRepository.findAll();
+        stats.put("allOrders", allOrders);
+        
+        return ResponseEntity.ok(stats);
+    }
+}
+
