@@ -1,0 +1,57 @@
+# File: tmp/Dockerfile
+
+# 1. Giai đoạn Build
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy package files và cài đặt dependencies
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Sử dụng npm ci cho production build (nhanh hơn và đảm bảo lock file)
+RUN npm ci
+
+# Generate Prisma Client (quan trọng vì bạn dùng Prisma)
+RUN npx prisma generate
+
+# Copy toàn bộ code nguồn
+COPY . .
+
+# Build dự án Next.js
+RUN npm run build
+
+# 2. Giai đoạn Run (Production)
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Tạo user non-root để chạy ứng dụng (bảo mật hơn)
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy package files và chỉ cài production dependencies
+COPY --from=builder /app/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy các file cần thiết từ giai đoạn builder
+COPY --from=builder /app/.next ./.next
+# Tạo thư mục public rỗng (Next.js cần thư mục này, ngay cả khi rỗng)
+# Nếu có thư mục public trong source code, nó sẽ được copy khi COPY . . trong builder stage
+# Nhưng vì không có trong source, chỉ cần tạo thư mục rỗng
+RUN mkdir -p ./public
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Set quyền sở hữu cho user nextjs
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+CMD ["npm", "start"]
